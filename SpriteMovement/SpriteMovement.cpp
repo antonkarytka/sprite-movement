@@ -4,7 +4,13 @@
 #include "stdafx.h"
 #include "SpriteMovement.h"
 
+#include <iostream>
+using namespace std;
+
 #define MAX_LOADSTRING 100
+#define RECT_WIDTH 200
+#define RECT_HEIGHT 100
+#define MOVE_OFFSET 2
 
 // Global Variables:
 HINSTANCE hInst;                                // current instance
@@ -16,6 +22,42 @@ ATOM                MyRegisterClass(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
+
+
+Rectanglie::Rectanglie(int left = 0, int top = 0, int width = 200, int height = 100)
+{
+	this->left = left;
+	this->top = top;
+	this->right = left + width;
+	this->bottom = top + height;
+}
+
+void Rectanglie::MoveLeft(int offset)
+{
+	this->left -= offset;
+	this->right -= offset;
+}
+
+void Rectanglie::MoveRight(int offset)
+{
+	this->left += offset;
+	this->right += offset;
+}
+
+void Rectanglie::MoveDown(int offset)
+{
+	this->top += offset;
+	this->bottom += offset;
+}
+
+void Rectanglie::MoveUp(int offset)
+{
+	this->top -= offset;
+	this->bottom -= offset;
+}
+
+Rectanglie *rectangle = new Rectanglie(200, 200, RECT_WIDTH, RECT_HEIGHT);
+
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
@@ -125,7 +167,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
     {
-    case WM_COMMAND:
+		case WM_COMMAND:
         {
             int wmId = LOWORD(wParam);
             // Parse the menu selections:
@@ -142,19 +184,54 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             }
         }
         break;
-    case WM_PAINT:
-        {
-            PAINTSTRUCT ps;
-            HDC hdc = BeginPaint(hWnd, &ps);
-            // TODO: Add any drawing code that uses hdc here...
-            EndPaint(hWnd, &ps);
-        }
+		
+		case WM_PAINT:
+		{
+			PAINTSTRUCT ps;
+			HDC hDC = BeginPaint(hWnd, &ps);
+			Rectangle(hDC, rectangle->left, rectangle->top, rectangle->right, rectangle->bottom);
+			EndPaint(hWnd, &ps);
+		}
         break;
-    case WM_DESTROY:
-        PostQuitMessage(0);
-        break;
-    default:
-        return DefWindowProc(hWnd, message, wParam, lParam);
+
+		case WM_KEYDOWN:
+		{
+			switch (wParam)
+			{
+				case VK_UP:
+				{
+					rectangle->MoveUp(MOVE_OFFSET);
+				}
+				break;
+
+				case VK_RIGHT:
+				{
+					rectangle->MoveRight(MOVE_OFFSET);
+				}
+				break;
+				
+				case VK_DOWN:
+				{
+					rectangle->MoveDown(MOVE_OFFSET);
+				}
+				break;
+				
+				case VK_LEFT:
+				{
+					rectangle->MoveLeft(MOVE_OFFSET);
+				}
+				break;
+			}
+			InvalidateRect(hWnd, NULL, TRUE);
+		}
+		break;
+
+		case WM_DESTROY:
+			PostQuitMessage(0);
+			break;
+    
+		default:
+			return DefWindowProc(hWnd, message, wParam, lParam);
     }
     return 0;
 }
@@ -165,16 +242,16 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     UNREFERENCED_PARAMETER(lParam);
     switch (message)
     {
-    case WM_INITDIALOG:
-        return (INT_PTR)TRUE;
+		case WM_INITDIALOG:
+			return (INT_PTR)TRUE;
 
-    case WM_COMMAND:
-        if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
-        {
-            EndDialog(hDlg, LOWORD(wParam));
-            return (INT_PTR)TRUE;
-        }
-        break;
+	    case WM_COMMAND:
+			if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
+			{
+				EndDialog(hDlg, LOWORD(wParam));
+				return (INT_PTR)TRUE;
+			}
+			break;
     }
     return (INT_PTR)FALSE;
 }
