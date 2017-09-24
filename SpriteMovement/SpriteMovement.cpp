@@ -10,7 +10,7 @@ using namespace std;
 #define MAX_LOADSTRING 100
 #define RECT_WIDTH 200
 #define RECT_HEIGHT 100
-#define MOVE_OFFSET 2
+#define MOVE_OFFSET 20
 
 // Global Variables:
 HINSTANCE hInst;                                // current instance
@@ -56,6 +56,7 @@ void Rectanglie::MoveUp(int offset)
 	this->bottom -= offset;
 }
 
+RECT window;
 Rectanglie *rectangle = new Rectanglie(200, 200, RECT_WIDTH, RECT_HEIGHT);
 
 
@@ -198,27 +199,39 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		{
 			switch (wParam)
 			{
+				case VK_LEFT:
+				{
+					if (rectangle->left - MOVE_OFFSET > 0) 
+						rectangle->MoveLeft(MOVE_OFFSET);
+					else 
+						rectangle->MoveLeft(rectangle->left);
+				}
+				break;
+
 				case VK_UP:
 				{
-					rectangle->MoveUp(MOVE_OFFSET);
+					if (rectangle->top - MOVE_OFFSET > 0) 
+						rectangle->MoveUp(MOVE_OFFSET);
+					else 
+						rectangle->MoveUp(rectangle->top);
 				}
 				break;
 
 				case VK_RIGHT:
 				{
-					rectangle->MoveRight(MOVE_OFFSET);
+					if (GetClientRect(hWnd, &window) && (rectangle->right + MOVE_OFFSET < window.right))
+						rectangle->MoveRight(MOVE_OFFSET);
+					else
+						rectangle->MoveRight(window.right - rectangle->right);
 				}
 				break;
 				
 				case VK_DOWN:
 				{
-					rectangle->MoveDown(MOVE_OFFSET);
-				}
-				break;
-				
-				case VK_LEFT:
-				{
-					rectangle->MoveLeft(MOVE_OFFSET);
+					if (GetClientRect(hWnd, &window) && (rectangle->bottom + MOVE_OFFSET < window.bottom)) 
+						rectangle->MoveDown(MOVE_OFFSET);
+					else 
+						rectangle->MoveDown(window.bottom - rectangle->bottom);
 				}
 				break;
 			}
