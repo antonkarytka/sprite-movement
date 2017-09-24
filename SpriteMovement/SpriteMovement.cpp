@@ -16,6 +16,7 @@ using namespace std;
 HINSTANCE hInst;                                // current instance
 WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
 WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
+bool shiftDown = false;
 
 // Forward declarations of functions included in this code module:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -34,26 +35,59 @@ Rectanglie::Rectanglie(int left = 0, int top = 0, int width = 200, int height = 
 
 void Rectanglie::MoveLeft(int offset)
 {
-	this->left -= offset;
-	this->right -= offset;
+	if (this->left - offset > 0)
+	{
+		this->left -= offset;
+		this->right -= offset;
+	}
+	else
+	{
+		this->right -= this->left;
+		this->left -= this->left;
+	}
+	
 }
 
-void Rectanglie::MoveRight(int offset)
+void Rectanglie::MoveRight(int offset, int windowWidth)
 {
-	this->left += offset;
-	this->right += offset;
+	if (this->right + offset < windowWidth)
+	{
+		this->left += offset;
+		this->right += offset;
+	}
+	else
+	{
+		this->left += windowWidth - this->right;
+		this->right += windowWidth - this->right;
+	}
 }
 
-void Rectanglie::MoveDown(int offset)
+void Rectanglie::MoveDown(int offset, int windowHeight)
 {
-	this->top += offset;
-	this->bottom += offset;
+	if (this->bottom + offset < windowHeight)
+	{
+		this->top += offset;
+		this->bottom += offset;
+	}
+	else
+	{
+		this->top += windowHeight - this->bottom;
+		this->bottom += windowHeight - this->bottom;
+	}
 }
 
 void Rectanglie::MoveUp(int offset)
 {
-	this->top -= offset;
-	this->bottom -= offset;
+	if (this->top - MOVE_OFFSET > 0)
+	{
+		this->top -= offset;
+		this->bottom -= offset;
+	}
+	else
+	{
+		this->bottom -= this->top;
+		this->top -= this->top;
+	}
 }
 
 RECT window;
@@ -201,39 +235,58 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			{
 				case VK_LEFT:
 				{
-					if (rectangle->left - MOVE_OFFSET > 0) 
-						rectangle->MoveLeft(MOVE_OFFSET);
-					else 
-						rectangle->MoveLeft(rectangle->left);
+					rectangle->MoveLeft(MOVE_OFFSET);
 				}
 				break;
 
 				case VK_UP:
 				{
-					if (rectangle->top - MOVE_OFFSET > 0) 
-						rectangle->MoveUp(MOVE_OFFSET);
-					else 
-						rectangle->MoveUp(rectangle->top);
+					rectangle->MoveUp(MOVE_OFFSET);
 				}
 				break;
 
 				case VK_RIGHT:
 				{
-					if (GetClientRect(hWnd, &window) && (rectangle->right + MOVE_OFFSET < window.right))
-						rectangle->MoveRight(MOVE_OFFSET);
-					else
-						rectangle->MoveRight(window.right - rectangle->right);
+					if (GetClientRect(hWnd, &window)) rectangle->MoveRight(MOVE_OFFSET, window.right);
 				}
 				break;
 				
 				case VK_DOWN:
 				{
-					if (GetClientRect(hWnd, &window) && (rectangle->bottom + MOVE_OFFSET < window.bottom)) 
-						rectangle->MoveDown(MOVE_OFFSET);
-					else 
-						rectangle->MoveDown(window.bottom - rectangle->bottom);
+					if (GetClientRect(hWnd, &window)) rectangle->MoveDown(MOVE_OFFSET, window.bottom);
 				}
 				break;
+				
+				case VK_SHIFT:
+				{
+					shiftDown = true;
+				}
+				break;
+			}
+			InvalidateRect(hWnd, NULL, TRUE);
+		}
+		break;
+
+		case WM_KEYUP:
+		{
+			case VK_SHIFT:
+			{
+				shiftDown = false;
+			}
+		}
+		break;
+
+		case WM_MOUSEWHEEL:
+		{
+			if ((int)wParam > 0)
+			{
+				if (shiftDown) rectangle->MoveLeft(MOVE_OFFSET);
+				else rectangle->MoveUp(MOVE_OFFSET);
+			}
+			else if (GetClientRect(hWnd, &window))
+			{
+				if (shiftDown) rectangle->MoveRight(MOVE_OFFSET, window.right);
+				else rectangle->MoveDown(MOVE_OFFSET, window.bottom);
 			}
 			InvalidateRect(hWnd, NULL, TRUE);
 		}
