@@ -8,15 +8,16 @@
 using namespace std;
 
 #define MAX_LOADSTRING 100
-#define RECT_WIDTH 200
-#define RECT_HEIGHT 100
-#define MOVE_OFFSET 20
+#define SPRITE_WIDTH 150
+#define SPRITE_HEIGHT 150
+#define MOVE_OFFSET 10
 
 // Global Variables:
 HINSTANCE hInst;                                // current instance
 WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
 WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
 bool shiftDown = false;
+wchar_t SPRITE_FILENAME[60] = L"ball.bmp";
 
 // Forward declarations of functions included in this code module:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -25,15 +26,17 @@ LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 
 
-Rectanglie::Rectanglie(int left = 0, int top = 0, int width = 200, int height = 100)
+Sprite::Sprite(int left = 0, int top = 0, int width = 200, int height = 100)
 {
 	this->left = left;
 	this->top = top;
 	this->right = left + width;
 	this->bottom = top + height;
+	this->width = width;
+	this->height = height;
 }
 
-void Rectanglie::MoveLeft(int offset)
+void Sprite::MoveLeft(int offset)
 {
 	if (this->left - offset > 0)
 	{
@@ -48,7 +51,7 @@ void Rectanglie::MoveLeft(int offset)
 	
 }
 
-void Rectanglie::MoveRight(int offset, int windowWidth)
+void Sprite::MoveRight(int offset, int windowWidth)
 {
 	if (this->right + offset < windowWidth)
 	{
@@ -62,7 +65,7 @@ void Rectanglie::MoveRight(int offset, int windowWidth)
 	}
 }
 
-void Rectanglie::MoveDown(int offset, int windowHeight)
+void Sprite::MoveDown(int offset, int windowHeight)
 {
 	if (this->bottom + offset < windowHeight)
 	{
@@ -76,7 +79,7 @@ void Rectanglie::MoveDown(int offset, int windowHeight)
 	}
 }
 
-void Rectanglie::MoveUp(int offset)
+void Sprite::MoveUp(int offset)
 {
 	if (this->top - MOVE_OFFSET > 0)
 	{
@@ -91,7 +94,7 @@ void Rectanglie::MoveUp(int offset)
 }
 
 RECT window;
-Rectanglie *rectangle = new Rectanglie(200, 200, RECT_WIDTH, RECT_HEIGHT);
+Sprite *sprite = new Sprite(200, 200, SPRITE_WIDTH, SPRITE_HEIGHT);
 
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
@@ -223,8 +226,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		case WM_PAINT:
 		{
 			PAINTSTRUCT ps;
+			BITMAP bitmap;
 			HDC hDC = BeginPaint(hWnd, &ps);
-			Rectangle(hDC, rectangle->left, rectangle->top, rectangle->right, rectangle->bottom);
+			HANDLE hBitmap = LoadImage(nullptr, SPRITE_FILENAME, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+			GetObject(hBitmap, sizeof(BITMAP), &bitmap);
+			HDC hCompatibleDc = CreateCompatibleDC(hDC);
+			HGDIOBJ hOldBitmap = SelectObject(hCompatibleDc, hBitmap);
+			StretchBlt(hDC, sprite->left, sprite->top, sprite->width, sprite->height, hCompatibleDc, 0, 0, bitmap.bmWidth, bitmap.bmHeight, SRCCOPY);
+			SelectObject(hCompatibleDc, hOldBitmap);
+			DeleteObject(hBitmap);
+			DeleteDC(hCompatibleDc);
 			EndPaint(hWnd, &ps);
 		}
         break;
@@ -235,25 +246,25 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			{
 				case VK_LEFT:
 				{
-					rectangle->MoveLeft(MOVE_OFFSET);
+					sprite->MoveLeft(MOVE_OFFSET);
 				}
 				break;
 
 				case VK_UP:
 				{
-					rectangle->MoveUp(MOVE_OFFSET);
+					sprite->MoveUp(MOVE_OFFSET);
 				}
 				break;
 
 				case VK_RIGHT:
 				{
-					if (GetClientRect(hWnd, &window)) rectangle->MoveRight(MOVE_OFFSET, window.right);
+					if (GetClientRect(hWnd, &window)) sprite->MoveRight(MOVE_OFFSET, window.right);
 				}
 				break;
 				
 				case VK_DOWN:
 				{
-					if (GetClientRect(hWnd, &window)) rectangle->MoveDown(MOVE_OFFSET, window.bottom);
+					if (GetClientRect(hWnd, &window)) sprite->MoveDown(MOVE_OFFSET, window.bottom);
 				}
 				break;
 				
@@ -280,13 +291,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		{
 			if ((int)wParam > 0)
 			{
-				if (shiftDown) rectangle->MoveLeft(MOVE_OFFSET);
-				else rectangle->MoveUp(MOVE_OFFSET);
+				if (shiftDown) sprite->MoveLeft(MOVE_OFFSET);
+				else sprite->MoveUp(MOVE_OFFSET);
 			}
 			else if (GetClientRect(hWnd, &window))
 			{
-				if (shiftDown) rectangle->MoveRight(MOVE_OFFSET, window.right);
-				else rectangle->MoveDown(MOVE_OFFSET, window.bottom);
+				if (shiftDown) sprite->MoveRight(MOVE_OFFSET, window.right);
+				else sprite->MoveDown(MOVE_OFFSET, window.bottom);
 			}
 			InvalidateRect(hWnd, NULL, TRUE);
 		}

@@ -3,12 +3,12 @@
 #include "resource.h"
 
 #pragma once
-class Rectanglie
+class Sprite
 {
 public:
-	int top, right, left, bottom;
+	int top, right, left, bottom, width, height;
 
-	Rectanglie(int top, int left, int width, int height);
+	Sprite(int top, int left, int width, int height);
 
 	void MoveLeft(int offset);
 	void MoveUp(int offset);
