@@ -8,16 +8,18 @@
 using namespace std;
 
 #define MAX_LOADSTRING 100
-#define SPRITE_WIDTH 150
-#define SPRITE_HEIGHT 150
-#define MOVE_OFFSET 10
 
 // Global Variables:
 HINSTANCE hInst;                                // current instance
 WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
 WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
+
+const wchar_t SPRITE_FILENAME[15] = L"ball.bmp";
+const int SPRITE_WIDTH = 150;
+const int SPRITE_HEIGHT = 150;
+const int MOVE_OFFSET = 10;
+const int MOVE_OFFSET_MULTIPLIER = 3;
 bool shiftDown = false;
-wchar_t SPRITE_FILENAME[60] = L"ball.bmp";
 
 // Forward declarations of functions included in this code module:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -45,10 +47,23 @@ void Sprite::MoveLeft(int offset)
 	}
 	else
 	{
-		this->right -= this->left;
-		this->left -= this->left;
+		this->right -= this->left + MOVE_OFFSET_MULTIPLIER * offset;
+		this->left = MOVE_OFFSET_MULTIPLIER * offset;
 	}
-	
+}
+
+void Sprite::MoveUp(int offset)
+{
+	if (this->top - offset > 0)
+	{
+		this->top -= offset;
+		this->bottom -= offset;
+	}
+	else
+	{
+		this->bottom -= this->top + MOVE_OFFSET_MULTIPLIER * offset;
+		this->top = MOVE_OFFSET_MULTIPLIER * offset;
+	}
 }
 
 void Sprite::MoveRight(int offset, int windowWidth)
@@ -60,8 +75,8 @@ void Sprite::MoveRight(int offset, int windowWidth)
 	}
 	else
 	{
-		this->left += windowWidth - this->right;
-		this->right += windowWidth - this->right;
+		this->left += windowWidth - this->right - MOVE_OFFSET_MULTIPLIER * offset;
+		this->right += windowWidth - this->right - MOVE_OFFSET_MULTIPLIER * offset;
 	}
 }
 
@@ -74,22 +89,8 @@ void Sprite::MoveDown(int offset, int windowHeight)
 	}
 	else
 	{
-		this->top += windowHeight - this->bottom;
-		this->bottom += windowHeight - this->bottom;
-	}
-}
-
-void Sprite::MoveUp(int offset)
-{
-	if (this->top - MOVE_OFFSET > 0)
-	{
-		this->top -= offset;
-		this->bottom -= offset;
-	}
-	else
-	{
-		this->bottom -= this->top;
-		this->top -= this->top;
+		this->top += windowHeight - this->bottom - MOVE_OFFSET_MULTIPLIER * offset;
+		this->bottom += windowHeight - this->bottom - MOVE_OFFSET_MULTIPLIER * offset;
 	}
 }
 
@@ -104,8 +105,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 {
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
-
-    // TODO: Place code here.
 
     // Initialize global strings
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
